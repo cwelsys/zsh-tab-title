@@ -7,6 +7,9 @@
 # See: http://www.faqs.org/docs/Linux-mini/Xterm-Title.html#ss3.1
 # Fully supports screen, hyper, iterm, wezterm, and probably most modern xterm and rxvt
 # (In screen, only short_tab_title is used)
+#
+# Enhanced WezTerm support with OSC 1337 user vars and OSC 7 working directory
+# For SSH sessions, ensure this plugin is installed on remote hosts for best experience
 function title {
   emulate -L zsh
   setopt prompt_subst
@@ -65,6 +68,15 @@ function setTerminalTitleInIdle {
   ZSH_THEME_TERM_TITLE_IDLE="$ZSH_TAB_TITLE_PREFIX %~ $ZSH_TAB_TITLE_SUFFIX"
 
   title "$ZSH_THEME_TERM_TAB_TITLE_IDLE" "$ZSH_THEME_TERM_TITLE_IDLE"
+  
+  # WezTerm-specific: Set OSC 1337 user vars for better integration
+  if [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
+    printf "\033]1337;SetUserVar=WEZTERM_PROG=%s\033\\" "$(echo -n "zsh" | base64)"
+    printf "\033]1337;SetUserVar=WEZTERM_USER=%s\033\\" "$(echo -n "$USER" | base64)"
+    printf "\033]1337;SetUserVar=WEZTERM_HOST=%s\033\\" "$(echo -n "$HOST" | base64)"
+    # Set current working directory with OSC 7
+    printf "\033]7;file://%s%s\033\\" "$HOST" "$PWD"
+  fi
 }
 
 # Runs before showing the prompt
@@ -97,7 +109,14 @@ function omz_termsupport_preexec {
     title "${PWD##*/}:%100>...>$LINE%<<" "${PWD##*/}:${CMD}"
   else
     title "%100>...>$LINE%<<" "$CMD"
-  fi  
+  fi
+  
+  # WezTerm-specific: Update user vars when executing commands
+  if [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
+    printf "\033]1337;SetUserVar=WEZTERM_PROG=%s\033\\" "$(echo -n "$CMD" | base64)"
+    # Update current working directory with OSC 7
+    printf "\033]7;file://%s%s\033\\" "$HOST" "$PWD"
+  fi
 }
 
 # Execute the first time, so it show correctly on terminal load
