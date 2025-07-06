@@ -5,7 +5,7 @@
 # usage: title short_tab_title long_window_title
 #
 # See: http://www.faqs.org/docs/Linux-mini/Xterm-Title.html#ss3.1
-# Fully supports screen, hyper, iterm, and probably most modern xterm and rxvt
+# Fully supports screen, hyper, iterm, wezterm, and probably most modern xterm and rxvt
 # (In screen, only short_tab_title is used)
 function title {
   emulate -L zsh
@@ -22,6 +22,9 @@ function title {
   elif [[ "$TERM_PROGRAM" == "Hyper" ]]; then
     print -Pn "\e]1;$termTitle:q\a" # set tab name
     print -Pn "\e]2;$tabTitle:q\a" # set window name
+  elif [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
+    print -Pn "\e]2;$termTitle:q\a" # set window name
+    print -Pn "\e]1;$tabTitle:q\a" # set tab name
   else
     case "$TERM" in
       xterm-kitty)

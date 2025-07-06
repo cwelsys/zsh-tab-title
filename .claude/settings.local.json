@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:wezterm.org)",
+      "Bash(echo:*)"
+    ],
+    "deny": []
+  }
+}
