@@ -19,8 +19,8 @@ function title {
   
   [[ "$EMACS" == *term* ]] && return
 
-  tabTitle="\$1"
-  termTitle="\$2"
+  tabTitle="$1"
+  termTitle="$2"
 
   if [[ "$ZSH_TAB_TITLE_DEBUG" == "true" ]]; then
     echo "[DEBUG] title() called - tabTitle='$tabTitle', termTitle='$termTitle'"
@@ -44,6 +44,11 @@ function title {
       xterm-kitty)
         print -Pn "\e]1;$termTitle:q\a" # set window name
         print -Pn "\e]2;$tabTitle:q\a" # set tab name
+      ;;
+
+      wezterm)
+        print -Pn "\e]2;$termTitle:q\a" # set window name
+        print -Pn "\e]1;$tabTitle:q\a" # set tab name
       ;;
 
       cygwin|xterm*|putty*|rxvt*|ansi|${~ZSH_TAB_TITLE_ADDITIONAL_TERMS})
