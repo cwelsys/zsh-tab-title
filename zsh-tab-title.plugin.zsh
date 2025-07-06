@@ -22,6 +22,11 @@ function title {
   tabTitle="\$1"
   termTitle="\$2"
 
+  if [[ "$ZSH_TAB_TITLE_DEBUG" == "true" ]]; then
+    echo "[DEBUG] title() called - tabTitle='$tabTitle', termTitle='$termTitle'"
+    echo "[DEBUG] TERM_PROGRAM='$TERM_PROGRAM', TERM='$TERM'"
+  fi
+
   if [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
     print -Pn "\e]2;$termTitle:q\a" # set window name
     print -Pn "\e]1;$tabTitle:q\a" # set tab name
@@ -32,6 +37,9 @@ function title {
     print -Pn "\e]2;$termTitle:q\a" # set window name
     print -Pn "\e]1;$tabTitle:q\a" # set tab name
   else
+    if [[ "$ZSH_TAB_TITLE_DEBUG" == "true" ]]; then
+      echo "[DEBUG] Using fallback title setting for TERM='$TERM'"
+    fi
     case "$TERM" in
       xterm-kitty)
         print -Pn "\e]1;$termTitle:q\a" # set window name
