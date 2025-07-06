@@ -10,6 +10,9 @@
 #
 # Enhanced WezTerm support with OSC 1337 user vars and OSC 7 working directory
 # For SSH sessions, ensure this plugin is installed on remote hosts for best experience
+#
+# Debug: Set ZSH_TAB_TITLE_DEBUG=true to see what's happening
+# Example: export ZSH_TAB_TITLE_DEBUG=true
 function title {
   emulate -L zsh
   setopt prompt_subst
@@ -70,12 +73,29 @@ function setTerminalTitleInIdle {
   title "$ZSH_THEME_TERM_TAB_TITLE_IDLE" "$ZSH_THEME_TERM_TITLE_IDLE"
   
   # WezTerm-specific: Set OSC 1337 user vars for better integration
-  if [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
+  # Check multiple ways to detect WezTerm, or assume WezTerm in SSH sessions
+  local is_wezterm=false
+  
+  if [[ "$TERM_PROGRAM" == "WezTerm" ]] || [[ "$WEZTERM_PANE" != "" ]] || [[ "$TERM_PROGRAM_VERSION" =~ "wezterm" ]]; then
+    is_wezterm=true
+  elif [[ "$SSH_CONNECTION" != "" ]] && [[ "$ZSH_TAB_TITLE_ASSUME_WEZTERM_SSH" == "true" ]]; then
+    # Assume WezTerm in SSH sessions if explicitly enabled
+    is_wezterm=true
+  fi
+  
+  if [[ "$is_wezterm" == "true" ]]; then
+    if [[ "$ZSH_TAB_TITLE_DEBUG" == "true" ]]; then
+      echo "[DEBUG] WezTerm detected/assumed - setting OSC sequences"
+      echo "[DEBUG] TERM_PROGRAM=$TERM_PROGRAM, WEZTERM_PANE=$WEZTERM_PANE, SSH_CONNECTION=$SSH_CONNECTION"
+      echo "[DEBUG] HOST=$HOST, PWD=$PWD"
+    fi
     printf "\033]1337;SetUserVar=WEZTERM_PROG=%s\033\\" "$(echo -n "zsh" | base64)"
     printf "\033]1337;SetUserVar=WEZTERM_USER=%s\033\\" "$(echo -n "$USER" | base64)"
     printf "\033]1337;SetUserVar=WEZTERM_HOST=%s\033\\" "$(echo -n "$HOST" | base64)"
     # Set current working directory with OSC 7
     printf "\033]7;file://%s%s\033\\" "$HOST" "$PWD"
+  elif [[ "$ZSH_TAB_TITLE_DEBUG" == "true" ]]; then
+    echo "[DEBUG] WezTerm not detected - TERM_PROGRAM=$TERM_PROGRAM, WEZTERM_PANE=$WEZTERM_PANE, SSH_CONNECTION=$SSH_CONNECTION"
   fi
 }
 
@@ -112,7 +132,17 @@ function omz_termsupport_preexec {
   fi
   
   # WezTerm-specific: Update user vars when executing commands
-  if [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
+  # Check multiple ways to detect WezTerm, or assume WezTerm in SSH sessions
+  local is_wezterm=false
+  
+  if [[ "$TERM_PROGRAM" == "WezTerm" ]] || [[ "$WEZTERM_PANE" != "" ]] || [[ "$TERM_PROGRAM_VERSION" =~ "wezterm" ]]; then
+    is_wezterm=true
+  elif [[ "$SSH_CONNECTION" != "" ]] && [[ "$ZSH_TAB_TITLE_ASSUME_WEZTERM_SSH" == "true" ]]; then
+    # Assume WezTerm in SSH sessions if explicitly enabled
+    is_wezterm=true
+  fi
+  
+  if [[ "$is_wezterm" == "true" ]]; then
     printf "\033]1337;SetUserVar=WEZTERM_PROG=%s\033\\" "$(echo -n "$CMD" | base64)"
     # Update current working directory with OSC 7
     printf "\033]7;file://%s%s\033\\" "$HOST" "$PWD"
